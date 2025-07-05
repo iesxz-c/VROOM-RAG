@@ -1,0 +1,1 @@
+c:\Users\akash\Music\LANG1\.venv\Scripts\python.exe -m pip install langchain
