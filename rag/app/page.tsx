@@ -19,10 +19,17 @@ import PSr from "./components/PSr";
 const Home = () => {
     const { isLoading, append, input, handleInputChange, handleSubmit, messages } = useChat();
 
+    const handlePromptClick = (prompt) => {
+        const msg: Message = {
+            id: crypto.randomUUID(),
+            content: prompt,
+            role: "user"
+        }
+        append(msg);
+    }
 
 
-
-    const noMessages = false;
+    const noMessages = !messages || messages.length === 0;
 
 
     return (
@@ -35,11 +42,14 @@ const Home = () => {
                             Vroom knows Red Bull wins, Ferrari fumbles, and McLaren clocks in once a month. New to F1? Cute. Ask anything—we’ll pretend you always knew what an undercut was (we won’t).
                         </p>
                         <br />
-                        <PSr />
+                        <PSr onPromptClick={handlePromptClick} />
                     </>
                 ) : (
                     <>
-                    <Lb/>
+                    {messages.map((message,index)=><Bubble
+                    key={`message-${index}`} message={message} />
+                    )}
+                    {isLoading && <Lb/>}
                     </>
                 )}
                 
