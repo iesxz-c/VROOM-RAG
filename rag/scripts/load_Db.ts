@@ -21,6 +21,8 @@ const { ASTRA_DB_NAMESPACE,
   //apiKey: OPENAI_API_KEY,
 //});
 
+// niggg when u trynna run this after a long time - run this by using `npm run seed` 
+
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 
