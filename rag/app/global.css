@@ -15,24 +15,48 @@ body {
   background-position: center;
 }
 
+
 main {
   width: 80vw;
-  height: 80vh;
+  max-height: 90vh; /* allow room for chat */
   background: linear-gradient(to bottom right, #1a0000, #0d0d0d 60%, #330000);
   border-radius: 15px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   padding: 20px;
   text-align: center;
   color: rgb(248, 176, 94);
   box-shadow: 0 0 30px rgba(255, 60, 0, 0.2);
+  overflow: hidden;
 }
+
 
 section {
   width: 100%;
   flex-grow: 1;
-  overflow: hidden;
+  overflow-y: auto; /* 👈 Always scrollable when needed */
+  padding-right: 5px;
+  margin-bottom: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #d3852c #0d0d0d;
+}
+.chat-section {
+  width: 100%;
+  flex-grow: 1;
+  overflow-y: auto; /* ✅ Always scrollable */
+  padding-right: 5px;
+  margin-bottom: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #d3852c #0d0d0d;
+}
+
+.chat-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-section::-webkit-scrollbar-thumb {
+  background-color: #d3852c;
+  border-radius: 4px;
 }
 
 section.populated {
@@ -201,7 +225,7 @@ input:focus {
     inset 0 0 6px rgba(255, 185, 100, 0.4);
 }
 
-.bubble.assistant {
+.bubble.system {
   border-radius: 20px 20px 20px 0;
   margin-right: auto;
   background: rgba(255, 255, 255, 0.04);
@@ -227,7 +251,7 @@ input:focus {
   border-top: none;
 }
 
-.bubble.assistant::after {
+.bubble.system::after {
   content: "";
   position: absolute;
   left: -6px;
@@ -239,4 +263,59 @@ input:focus {
   transform: rotate(45deg);
   border-right: none;
   border-top: none;
+}
+
+.prompt-button {
+  margin:8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f8b05e;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+
+
+  
+
+}
+
+
+
+.vroom-title {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-top: 20px;
+}
+
+.vroom-heading {
+  font-size: 2.8rem;
+  font-weight: bold;
+  color: #f8b05e;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(255, 140, 0, 0.3);
+}
+
+.vroom-heading .emoji {
+  animation: bounce 1.2s infinite;
+  display: inline-block;
+  margin-left: 6px;
+}
+
+.vroom-sub {
+  font-size: 1.1rem;
+  margin-top: 8px;
+  color: #d39d62;
+  font-style: italic;
+  text-shadow: 0 0 5px rgba(255, 140, 0, 0.15);
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }

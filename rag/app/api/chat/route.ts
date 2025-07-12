@@ -1,99 +1,93 @@
 import { GoogleGenAI } from "@google/genai";
-import { google } from "@ai-sdk/google"
 import { DataAPIClient } from "@datastax/astra-db-ts";
 import "dotenv/config";
-import { generateText } from "ai";
+import { NextRequest, NextResponse } from "next/server";
 
-const { ASTRA_DB_NAMESPACE,
-     ASTRA_DB_COLLECTION, 
-     ASTRA_DB_API_ENDPOINT,
-      ASTRA_DB_APPLICATION_TOKEN,
-       OPENAI_API_KEY ,
-         GEMINI_API_KEY
-    } = process.env;
+// Environment variables
+const {
+  ASTRA_DB_NAMESPACE,
+  ASTRA_DB_COLLECTION,
+  ASTRA_DB_API_ENDPOINT,
+  ASTRA_DB_APPLICATION_TOKEN,
+  GEMINI_API_KEY,
+} = process.env;
 
+// Gemini client
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
+// Astra DB client
 const client = new DataAPIClient(ASTRA_DB_APPLICATION_TOKEN);
 const db = client.db(ASTRA_DB_API_ENDPOINT, {
-    namespace: ASTRA_DB_NAMESPACE
+  namespace: ASTRA_DB_NAMESPACE,
 });
 
-export async function POST(req: Request) {
+// API route handler
+export async function POST(req: NextRequest) {
   try {
-    const { messages } = await req.json();
-    const latestMessage = messages?.[messages.length - 1]?.content;
+    const body = await req.json();
+    const userQuery = body.query;
 
-    if (!latestMessage) {
-      return new Response(JSON.stringify({ error: "No message found" }), { status: 400 });
+    if (!userQuery) {
+      return NextResponse.json({ error: "Query is required" }, { status: 400 });
     }
 
-    // Generate embedding using Gemini
-    const response = await ai.models.embedContent({
-      model: "models/gemini-embedding-exp-03-07",
+    // Step 1: Embed the user query
+    const embedRes = await ai.models.embedContent({
+      model: "text-embedding-004",
       contents: {
-        parts: [{ text: latestMessage }],
-        role: "user"
+        parts: [{ text: userQuery }],
+        role: "user",
       },
     });
 
-    // Extract the embedding values from the first (and typically only) embedding
-    const embedding = response.embeddings.values()[0].values;
-    let docContext = "";
+    const vector = embedRes.embeddings.values;
 
-    // Search for similar vectors in Astra DB
-    try {
-        const collection = await db.collection(ASTRA_DB_COLLECTION);
-        const cursor = collection.find(null, {
-            sort: {
-                $vector: embedding
-            },
-            limit: 10
-        });
-        
-        const documents = await cursor.toArray();
-        const docsMap = documents?.map((doc) => doc.text);
-        docContext = JSON.stringify(docsMap);
-        
-    } catch (error) {
-        console.log("Error fetching collection:", error);
-        docContext = "";
-    }
+    // Step 2: Query Astra DB
+    const collection = await db.collection(ASTRA_DB_COLLECTION);
+    const results: any[] = [];
+const cursor = collection.find({
+  sort: "$vector",
+  vector,
+  limit: 5,
+});
 
-    // Generate response using AI SDK with Google
-    const result = await generateText({
-        model: google("gemini-1.5-flash"),
-        messages: [
+for await (const doc of cursor) {
+  results.push(doc);
+}
+
+    const contextText = results.map((r: any) => r.text).join("\n\n");
+
+    // Step 3: Generate an answer using Gemini
+    const chatRes = await ai.models.generateContent({
+      model: "gemini-2.0-flash", // 
+      contents: [
+        {
+          role: "user",
+          parts: [
             {
-                role: "system",
-                content: `You are an AI assistant who knows everything about Formula One. Use the below context to augment what you know about Formula One racing. The context will provide you with the most recent page data from wikipedia, the official F1 website and others. If the context doesn't include the information you need answer based on your existing knowledge and don't mention the source of your information or what the context does or doesn't include. Format responses using markdown where applicable and don't return images.
--------------
-START CONTEXT
-${docContext}
-END CONTEXT
--------------`
+              text: `You are an AI assistant who knows everything about Formula One. 
+Use the below context to augment what you know about Formula One racing. 
+The context will provide you with the most recent page data from Wikipedia, 
+the official F1 website and others. If the context doesn't include the information
+you need, answer based on your existing knowledge and don't mention the source of your 
+information or what the context does or doesn't include. Format responses using markdown 
+where applicable and don't return images. Use the following context to answer the query:
+              \n\n${contextText}\n\nQuery: ${userQuery}`,
             },
-            {
-                role: "user", 
-                content: latestMessage
-            }
-        ]
+          ],
+        },
+      ],
     });
 
-    return new Response(JSON.stringify({ 
-        success: true, 
-        message: result.text,
-        context: docContext 
-    }), { 
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-    });
+    const answer = chatRes.text;
 
-  } catch (error) {
-    console.error("❌ Error in POST request:", error);
-    return new Response(JSON.stringify({ 
-        error: "Internal server error", 
-        details: error.message 
-    }), { status: 500 });
+    return NextResponse.json({
+      query: userQuery,
+      answer,
+      sources: results,
+    });
+  } catch (err: any) {
+    console.error("Error in ask route:", err);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

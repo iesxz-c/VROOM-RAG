@@ -1,9 +1,15 @@
-
-const Bubble = ({message}) => {
-  const { content , role } = message;
-  return (
-    <div className={`${role} bubble`}>{content}</div>
-  )
+// components/Bubble.tsx
+interface BubbleProps {
+  role: "user" | "system";
+  message: string;
 }
 
-export default Bubble
+const Bubble = ({ role, message }: BubbleProps) => {
+  return (
+    <div className={`bubble ${role}`}>
+      {message}
+    </div>
+  );
+};
+
+export default Bubble;

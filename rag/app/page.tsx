@@ -1,66 +1,70 @@
+// Home.tsx
 "use client";
-//npm install ai --legacy-peer-deps
-import Image from "next/image";
-import Logo from "@/app/assets/hq720.jpg";
-import { useChat } from "ai/react";
-import { Message } from "ai";
-import Bubble from "./components/Bubble";
-import Lb from "./components/Lb";
-import PSr from "./components/PSr";
 
-// use chat hook from vercel ai
-// allow us to easily  create a conversational
-// user interface for our chatbot--
-// it enables the streaming of chat messages
-// from our ai provider , manages the state for 
-// chat input and updates the ui automatically as 
-// new messages are received
+import { useState } from "react";
+import Bubble from "./components/Bubble";
+import Lb from "./components/Loading";
+import PSr from "./components/PromptSuggestionRows";
+import VroomTitle from "./components/VroomIntro";
 
 const Home = () => {
-    const { isLoading, append, input, handleInputChange, handleSubmit, messages } = useChat();
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-    const handlePromptClick = (prompt) => {
-        const msg: Message = {
-            id: crypto.randomUUID(),
-            content: prompt,
-            role: "user"
-        }
-        append(msg);
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  if (!input.trim()) return;
 
-    const noMessages = !messages || messages.length === 0;
+  setMessages((prev) => [...prev, { role: "user", message: input }]);
+  setInput(""); // ✅ clear immediately for UX
+  setLoading(true);
 
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: input }),
+  });
 
-    return (
-        <main>
-            <Image src={Logo} alt="Logo" width="250" />
-            <section className={noMessages ? "" : "populated"}>
-                {noMessages ? (
-                    <>
-                        <p className="starter">
-                            Vroom knows Red Bull wins, Ferrari fumbles, and McLaren clocks in once a month. New to F1? Cute. Ask anything—we’ll pretend you always knew what an undercut was (we won’t).
-                        </p>
-                        <br />
-                        <PSr onPromptClick={handlePromptClick} />
-                    </>
-                ) : (
-                    <>
-                    {messages.map((message,index)=><Bubble
-                    key={`message-${index}`} message={message} />
-                    )}
-                    {isLoading && <Lb/>}
-                    </>
-                )}
-                
-            </section>
-            <form onSubmit={handleSubmit}>
-                    <input className="qsbox" onChange={handleInputChange} value={input}
-                    placeholder="Ask me smth......" />
-                    <input type="submit" />
-                </form>
-        </main>
-    )
-}
+  const data = await res.json();
+  setMessages((prev) => [...prev, { role: "system", message: data.answer }]);
+  setLoading(false);
+};
+
+  return (
+    <main>
+          <VroomTitle />
+
+      <section className="chat-section">
+        {messages.length ? (
+          messages.map((m, i) => <Bubble key={i} message={m.message} role={m.role} />)
+        ) : (
+          <>
+            <p className="starter">
+              Vroom knows Red Bull wins, Ferrari fumbles, and McLaren clocks in once a month. New to F1? Cute. Ask anything—we’ll pretend you always knew what an undercut was (we won’t).
+            </p>
+            <br />
+            <PSr setInput={setInput} />
+          </>
+        )}
+        {loading && <Lb />}
+      </section>
+
+      <form onSubmit={handleSubmit}>
+        <input
+          className="qsbox"
+          onChange={handleInputChange}
+          value={input}
+          placeholder="Ask me smth......"
+        />
+        <input type="submit" />
+      </form>
+    </main>
+  );
+};
 
 export default Home;
