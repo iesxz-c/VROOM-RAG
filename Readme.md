@@ -6,8 +6,9 @@ An AI chatbot that answers Formula 1 questions using RAG (Retrieval-Augmented Ge
 
 1. Clone the repo:
 ```bash
-git clone https://github.com/your-username/vroom-f1-bot.git
-cd vroom-f1-bot
+git clone https://github.com/iesxz-c/VROOM-RAG.git
+cd VROOM-RAG
+cd rag
 ````
 
 2. Install dependencies:
