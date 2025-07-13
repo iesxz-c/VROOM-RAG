@@ -1,18 +1,10 @@
-# 🏎️ Vroom F1 Bot
+# 🏎️ Vroom Bot
 
-An AI chatbot that answers all your Formula 1 questions.
+An AI chatbot that answers Formula 1 questions using RAG (Retrieval-Augmented Generation).
 
-## Features
-
-- Built with Next.js and React
-- Uses Google Gemini AI for answers
-- Retrieves F1 data with Astra DB
-- Styled with CSS for a dark racing theme
-
-## Setup
+## 🛠️ How to Run
 
 1. Clone the repo:
-
 ```bash
 git clone https://github.com/your-username/vroom-f1-bot.git
 cd vroom-f1-bot
@@ -24,7 +16,7 @@ cd vroom-f1-bot
 npm install
 ```
 
-3. Add a `.env` file:
+3. Create a `.env` file:
 
 ```env
 GEMINI_API_KEY=your_api_key
@@ -34,27 +26,29 @@ ASTRA_DB_NAMESPACE=your_namespace
 ASTRA_DB_COLLECTION=your_collection
 ```
 
-4. Run locally:
+4. Seed the database:
+
+```bash
+npm run seed
+```
+
+(This runs the `scripts/load_DB.ts` script to populate Astra DB.)
+
+5. Start the dev server:
 
 ```bash
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000)
-
-## Usage
-
-Type your F1 question. Get an answer. That’s it.
-
-## Tech Stack
-
-* Next.js
-* React
-* Google Gemini API
-* Astra DB
-* Tailwind/CSS
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
+
+Powered by:
+
+* React + Next.js
+* Google Gemini (for generation)
+* Astra DB (for retrieval)
 
 MIT License.
 
