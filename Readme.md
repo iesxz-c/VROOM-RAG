@@ -1,6 +1,6 @@
-# 🏎️ Vroom Bot
+# RAG BOT
 
-An AI chatbot that answers Formula 1 questions using RAG (Retrieval-Augmented Generation).
+An AI chatbot using RAG (Retrieval-Augmented Generation).
 
 ## 🛠️ How to Run
 
